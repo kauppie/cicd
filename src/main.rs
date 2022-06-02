@@ -1,8 +1,10 @@
+use std::error::Error as StdError;
+
 use axum::{response::Html, routing::get, Router};
 use std::net::SocketAddr;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn StdError>> {
     // build our application with a route
     let app = Router::new().route("/", get(handler));
 
@@ -11,8 +13,9 @@ async fn main() {
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
-        .await
-        .unwrap();
+        .await?;
+
+    Ok(())
 }
 
 async fn handler() -> Html<&'static str> {
