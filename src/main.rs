@@ -1,36 +1,20 @@
-use std::error::Error as StdError;
-
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
+use axum::{response::Html, routing::get, Router};
+use std::net::SocketAddr;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn StdError>> {
-    let listener = TcpListener::bind("127.0.0.1:8080").await?;
+async fn main() {
+    // build our application with a route
+    let app = Router::new().route("/", get(handler));
 
-    loop {
-        let (mut socket, _) = listener.accept().await?;
+    // run it
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    println!("listening on {}", addr);
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
+}
 
-        tokio::spawn(async move {
-            let mut buf = [0; 1024];
-
-            // In a loop, read data from the socket and write the data back.
-            loop {
-                let n = match socket.read(&mut buf).await {
-                    // socket closed
-                    Ok(n) if n == 0 => return,
-                    Ok(n) => n,
-                    Err(e) => {
-                        eprintln!("failed to read from socket; err = {:?}", e);
-                        return;
-                    }
-                };
-
-                // Write the data back
-                if let Err(e) = socket.write_all(&buf[0..n]).await {
-                    eprintln!("failed to write to socket; err = {:?}", e);
-                    return;
-                }
-            }
-        });
-    }
+async fn handler() -> Html<&'static str> {
+    Html("<h1>Hello, World!</h1>")
 }
