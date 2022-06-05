@@ -9,7 +9,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     let app = Router::new().route("/", get(handler));
 
     // run it
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
